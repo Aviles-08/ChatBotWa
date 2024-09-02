@@ -12,22 +12,71 @@ const main = async () => {
 
     provider.initHttpServer(3002);
 
-    provider.http?.server.post('/send-nota', handleCtx(async (bot, req, res) => {
-        const { name, number, hotel, mediaURL } = req.body;
+    provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
+        const { number, message, mediaURL } = req.body;
         const contact = formatPhoneNumber(number);
-        const msj = `Hola ${name}, el hotel ${hotel} le envía su nota.`;
 
-        // mensaje de bienvenida
-        await bot.sendMessage(contact, msj, {});
+        try {
+            // Enviar mensaje de bienvenida
+            await bot.sendMessage(contact, message, {});
+            console.log('Mensaje enviado:', message);
 
-        // envío del archivo
-        if (mediaURL) {
-            await bot.sendMessage(contact, '', {
-                media: mediaURL
-            });
+            // Enviar archivo si existe una URL
+            if (mediaURL) {
+                await bot.sendMessage(contact, '', { media: mediaURL });
+                console.log('Archivo enviado:', mediaURL);
+            }
+
+            // Responder con éxito
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({
+                status: 200,
+                status_message: 'Ok',
+                texto: 'Mensaje enviado y archivo adjuntado (*≧ω≦)'
+            }));
+
+        } catch (error) {
+            console.error('Error al enviar mensaje o archivo:', error);
+
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 500;
+            res.end(JSON.stringify({
+                status: 500,
+                status_message: 'Error',
+                texto: 'Error al enviar el mensaje o archivo (｡•́︿•̀｡)',
+                error: error.message
+            }));
         }
+    }));
 
-        res.end(`Mensaje y nota enviados a ${name || 'contacto predeterminado'}`);
+    provider.http?.server.post('/send-message', handleCtx(async (bot, req, res) => {
+        const { number, message } = req.body;
+        const contact = formatPhoneNumber(number);
+
+        try {
+            await bot.sendMessage(contact, message, {});
+            console.log('Mensaje enviado:', message);
+
+            // Responder con éxito
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({
+                status: 200,
+                status_message: 'Ok',
+                texto: 'Mensaje enviado (*≧ω≦)'
+            }));
+
+        } catch (error) {
+            console.error('Error al enviar mensaje:', error);
+
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 500;
+            res.end(JSON.stringify({
+                status: 500,
+                status_message: 'Error',
+                texto: 'Error al enviar el mensaje (｡•́︿•̀｡)',
+                error: error.message
+            }));
+        }
     }));
 
     await createBot({

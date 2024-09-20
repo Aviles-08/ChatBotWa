@@ -10,7 +10,7 @@ const formatPhoneNumber = (number) => {
 const main = async () => {
     const provider = createProvider(BaileysProvider);
 
-    provider.initHttpServer(3002);
+    provider.initHttpServer(3001);
 
     provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
         const { number, message, mediaURL } = req.body;

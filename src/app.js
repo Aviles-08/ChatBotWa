@@ -1,8 +1,6 @@
 import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from '@bot-whatsapp/bot';
 import { BaileysProvider, handleCtx } from '@bot-whatsapp/provider-baileys';
 
-const flowBienvenida = addKeyword(['Hola', 'ola']).addAnswer('Hola, soy AviBot🤖', { delay: 500 });
-
 const formatPhoneNumber = (number) => {
     return `521${number}@s.whatsapp.net`;
 };
@@ -10,14 +8,16 @@ const formatPhoneNumber = (number) => {
 const main = async () => {
     const provider = createProvider(BaileysProvider);
 
-    provider.initHttpServer(3001);
+    provider.initHttpServer(3003);
 
     provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
         const { number, message, mediaURL } = req.body;
         const contact = formatPhoneNumber(number);
 
         try {
-            // Enviar mensaje de bienvenida
+            // Personalizar el mensaje con el nombre del hotel
+
+            // Enviar mensaje personalizado
             await bot.sendMessage(contact, message, {});
             console.log('Mensaje enviado:', message);
 
@@ -44,36 +44,6 @@ const main = async () => {
                 status: 500,
                 status_message: 'Error',
                 texto: 'Error al enviar el mensaje o archivo (｡•́︿•̀｡)',
-                error: error.message
-            }));
-        }
-    }));
-
-    provider.http?.server.post('/send-message', handleCtx(async (bot, req, res) => {
-        const { number, message } = req.body;
-        const contact = formatPhoneNumber(number);
-
-        try {
-            await bot.sendMessage(contact, message, {});
-            console.log('Mensaje enviado:', message);
-
-            // Responder con éxito
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({
-                status: 200,
-                status_message: 'Ok',
-                texto: 'Mensaje enviado (*≧ω≦)'
-            }));
-
-        } catch (error) {
-            console.error('Error al enviar mensaje:', error);
-
-            res.setHeader('Content-Type', 'application/json');
-            res.statusCode = 500;
-            res.end(JSON.stringify({
-                status: 500,
-                status_message: 'Error',
-                texto: 'Error al enviar el mensaje (｡•́︿•̀｡)',
                 error: error.message
             }));
         }

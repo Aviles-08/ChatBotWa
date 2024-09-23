@@ -8,6 +8,7 @@ const formatPhoneNumber = (number) => {
 const main = async () => {
     const provider = createProvider(BaileysProvider);
 
+    const server = http.createServer(provider.http?.app);
     provider.initHttpServer(3003);
 
     provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
@@ -15,9 +16,7 @@ const main = async () => {
         const contact = formatPhoneNumber(number);
 
         try {
-            // Personalizar el mensaje con el nombre del hotel
-
-            // Enviar mensaje personalizado
+            // Enviar mensaje de bienvenida
             await bot.sendMessage(contact, message, {});
             console.log('Mensaje enviado:', message);
 
@@ -54,6 +53,27 @@ const main = async () => {
         database: new MemoryDB(),
         provider,
     });
+
+    // Manejar señales de terminación SIGTERM y SIGINT
+    const shutdown = () => {
+        console.log('Recibida señal de terminación. Cerrando servidor...');
+
+        // Cerrar el servidor HTTP
+        server.close(() => {
+            console.log('Servidor HTTP cerrado.');
+            process.exit(0);
+        });
+
+        // O bien, si necesitas forzar el cierre
+        setTimeout(() => {
+            console.error('Forzando el cierre...');
+            process.exit(1);
+        }, 5000); // Espera de 5 segundos antes de forzar el cierre
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+
 };
 
 main();

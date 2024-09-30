@@ -1,33 +1,58 @@
 import { createBot, createFlow, MemoryDB, createProvider, addKeyword } from '@bot-whatsapp/bot';
 import { BaileysProvider, handleCtx } from '@bot-whatsapp/provider-baileys';
-import contacts from './contacts.js'; // const contacts = {'name': '521xxxxxxxxxx@s.whatsapp.net'}
+import contacts from './contacts.js'; // Define tus contactos en este archivo
 
-// Flow padre
+// Flow para el bot
 const flowBienvenida = addKeyword(['Hola', 'ola']).addAnswer('Hola, soy AviBot🤖', { delay: 500 });
+
+// Función para formatear el número de WhatsApp
+const formatPhoneNumber = (number) => {
+    return `521${number}@s.whatsapp.net`;
+};
+
+// Contactos definidos en el archivo 'contacts.js'
+/*
+contacts.js
+export default {
+  'Avi': '5219991234567@s.whatsapp.net',
+  'Mich': {
+    name: 'Michelle',
+    phoneNumber: '5219997654321'
+  }
+};
+*/
 
 const main = async () => {
     const provider = createProvider(BaileysProvider);
-
+    
+    // Inicializa el servidor HTTP en el puerto 3002
     provider.initHttpServer(3002);
 
-    // Ruta para enviar mensaje a un contacto específico o al contacto predeterminado
-    provider.http?.server.post('/send-message/:name?/:action?', handleCtx(async (bot, req, res) => {
-        const { name, action } = req.params;
-        const contact = contacts[name] || contacts['default'];
-        const body = req.body;
-        const msj = body.msj || `Mensaje de prueba para ${name || 'contacto predeterminado'}`;
-        const mediaURL = body.mediaURL;
+    // Ruta para enviar un contacto específico a un contacto objetivo
+    provider.http?.server.post('/send-contact/:target', handleCtx(async (bot, req, res) => {
+        const { target } = req.params;  // El nombre del contacto objetivo (ejemplo: Avi)
+        const contactInfo = contacts['Mich']; // Información del contacto de Mich
 
-        if (action === 'Doc' && mediaURL) {
-            // Si se pasa la acción "Doc" y una mediaURL, se envía el archivo
-            await bot.sendMessage(contact, msj, {
-                media: mediaURL
-            });
-            res.end(`Mensaje con media enviado a ${name || 'contacto predeterminado'}`);
-        } else {
-            // Si no hay "Doc" o mediaURL, solo envía el mensaje
-            await bot.sendMessage(contact, msj, {});
-            res.end(`Mensaje enviado a ${name || 'contacto predeterminado'}`);
+        if (!contacts[target]) {
+            res.statusCode = 404;
+            return res.end(`El contacto ${target} no existe.`);
+        }
+
+        const targetContact = contacts[target]; // Contacto al que quieres enviar (ejemplo: Avi)
+
+        try {
+            // Enviar el contacto de Mich a Avi
+            await bot.sendContact(
+                targetContact,
+                [{ displayName: contactInfo.name, vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${contactInfo.name}\nTEL:${contactInfo.phoneNumber}\nEND:VCARD` }]
+            );
+            console.log(`Contacto de ${contactInfo.name} enviado a ${target}`);
+            
+            res.end(`Contacto de ${contactInfo.name} enviado a ${target}`);
+        } catch (error) {
+            console.error('Error al enviar el contacto:', error);
+            res.statusCode = 500;
+            res.end('Error al enviar el contacto');
         }
     }));
 

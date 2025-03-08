@@ -14,6 +14,9 @@ const main = async () => {
 
     provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
         const { number, message, mediaURL } = req.body;
+        console.log('number:', number);
+        console.log('message:', message);
+        console.log('mediaURL:', mediaURL);
 
         if (number != null && !isNaN(Number(number))) {
             const contact = formatPhoneNumber(number);
@@ -53,6 +56,8 @@ const main = async () => {
 
     provider.http?.server.post('/send-message', handleCtx(async (bot, req, res) => {
         const { number, message } = req.body;
+        console.log('number:', number);
+        console.log('message:', message);
 
         if (number != null && !isNaN(Number(number))) {
             const contact = formatPhoneNumber(number);

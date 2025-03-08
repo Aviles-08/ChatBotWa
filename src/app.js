@@ -14,9 +14,9 @@ const main = async () => {
 
     provider.http?.server.post('/send-note', handleCtx(async (bot, req, res) => {
         const { number, message, mediaURL } = req.body;
-        const contact = formatPhoneNumber(number);
 
         if (number != null && !isNaN(Number(number))) {
+            const contact = formatPhoneNumber(number);
             try {
                 // Enviar mensaje de bienvenida
                 await bot.sendMessage(contact, message, {});
@@ -85,7 +85,7 @@ const main = async () => {
     }));
 
     await createBot({
-        flow: createFlow([flowBienvenida]),
+        //flow: createFlow([flowBienvenida]),
         database: new MemoryDB(),
         provider,
     });
